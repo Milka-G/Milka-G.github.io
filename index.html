@@ -108,170 +108,479 @@
         </div>
       </div>
       <script lang="javascript">
-let o, s, l;
-let gravity = 1.0;
-let mass = 5.0;
+        //
+// Corso di Coding con p5js
+// Autore: A.Erriquez
+// (c) 2022
+// 
+// Lezione 5-4: migliorie interfaccia utente (UI)
+// 
+// Argomenti:
+// - barra di stato
+//
+// Esercizi
+// - 
+//
+
+// dimensione canvas
+const SIZE = 450;
+// dimensione cella
+const CELL_SIZE = SIZE / 3;
+// dimensione simbolo
+const SYMBOL_SIZE = SIZE / 4;
+// dimensione barra di stato
+const STATUS_BAR_H = 20
+
+// array per le caselle
+let cells = [];
+
+// ciascun elemento rappresenta una casella, le righe sono messe in sequenza
+// *-----*-----*-----*
+// *     *     *     *
+// *  0  *  1  *  2  *
+// *     *     *     *
+// *-----*-----*-----*
+// *     *     *     *
+// *  3  *  4  *  5  *
+// *     *     *     *
+// *-----*-----*-----*
+// *     *     *     *
+// *  6  *  7  *  8  *
+// *     *     *     *
+// *-----*-----*-----*
+
+// giocatore iniziale
+let firstPlayer = 'X';
+// giocatore corrente
+let nowPlaying = 'X';
+
+// numero celle utilizzate
+let usedCells = 0;
+// gioco terminato?
+let gameOver = false;
+// vincitore (se gioco terminato)
+let winner = null;
+
+// giocatore virtuale
+const virtualPlayer = 'O';
+// giocatore "umano"
+const humanPlayer = 'X';
+
+// score di X e O
+let score;
+
+// stato del gioco
+// HUMAN : in attesa di mossa da giocatore umano
+// SIMULATION : mostra simulazione gioco
+let state = "HUMAN";
+
+// numero di millisecondi da attendere tra una simulazione e la successiva
+const SIMULATION_DELAY_MS=200;
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
-  noStroke();
-  // 입력: x, y, mass(질량), gravity(중력)
-  o = new Spring2D(0.0, width / 2, mass, gravity, 0, width);
-  s = new Spring2D(0.0, width / 2, mass, gravity, 1, width);
-  l = new Spring2D(0.0, width / 2, mass, gravity, 2, width);
+  createCanvas(SIZE, SIZE + STATUS_BAR_H);
+
+  resetGame();
 }
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-  fill(255, 150);
-  rect(0, 0, width, height);
+// reset (gioco e score)
+function resetGame()
+{
+  score = {'X':0, 'O': 0},
+    
+  initGame();
+}
+
+// nuovo gioco
+function initGame()
+{
+  // cambio giocatore iniziale ad ogni partita
+  nowPlaying = firstPlayer==='X' ? 'O' : 'X';
+  firstPlayer = nowPlaying;
+  
+  // reset celle utilizzate e gameOver
+  usedCells = 0;
+  gameOver = false;
+  winner = null;
+  
+  // crea celle
+  cells = [];
+  // riempie con x e y della griglia e nessun owner
+  for (let i=0; i<9; i++) {
+    cells.push(
+        {
+            x: i % 3,
+            y: int(i / 3),
+            owner: null,
+            simulated: false,
+        }
+    )
+  }
+  
+    // se il gioco non e' terminato ed il giocatore e' virtuale
+    if (nowPlaying===virtualPlayer) {
+      makeNextMove();
+    }
+}
+
+// controlla se la cella sia utilizzata
+// passaggio di struttura con attributi x e y, viene destrutturata nella dichiarazione di funzione
+function isCellUsed({ x, y })
+{
+  // calcolo indice in array rispetto a coordinate
+  const index = x + y * 3;
+
+  // fuori range
+  if (index<0 || index>=cells.length)
+    return undefined;
+
+  return cells[index].owner !== null;
+}
+
+// disegna cella
+// pos: oggetto {x.y} che indica posizione nella griglia
+// owner: 'X' o 'O'
+// color: colore da utilizzare
+function drawCell(pos,owner,color,simulated)
+{
+  if (pos.x<0 || pos.x>2 || pos.y<0 || pos.y>2)
+    return;
+    
+  strokeWeight(simulated ? 1 : 3);
+  stroke(color);
+
+  // calcola centro del simbolo rispetto al canvas
+  const center = {
+    x: CELL_SIZE/2 + pos.x * CELL_SIZE,
+    y: CELL_SIZE/2 + pos.y * CELL_SIZE,
+  }
+
+  switch (owner) {
+    // 'X' due linee diagonali
+    case 'X':
+      line(center.x-SYMBOL_SIZE/2,center.y-SYMBOL_SIZE/2,center.x+SYMBOL_SIZE/2,center.y+SYMBOL_SIZE/2);
+      line(center.x-SYMBOL_SIZE/2,center.y+SYMBOL_SIZE/2,center.x+SYMBOL_SIZE/2,center.y-SYMBOL_SIZE/2);
+      break;
+    // 'O': una circonferenza
+    case 'O':
+      circle(center.x,center.y,SYMBOL_SIZE/2);
+      break;
+  }
+}
+
+// verifica se il gioco e' terminato
+// per evitare di navigare su tutte le celle controlla rispetto ad ultima mossa
+function checkGameOver(lastMove, useCells, simulation)
+{
+  // l'ultimo che ha mosso potrebbe aver vinto
+  const potWinner = lastMove.owner;
+  
+  // riga
+  // si ipotizza abbia vinto
+  let fail = false;
+  // controlla le celle della riga
+  for (let c=0; c<3 && !fail; c++) {
+    const index = lastMove.y*3 + c;
+    // se una cella e' diversa dal potenziale vincitore allora ci si ferma
+    if (useCells[index].owner!==potWinner)
+      fail = true;
+  }
+  // se non e' mai entrato in fail = true allora sono tutte uguali
+  if (!fail) {
+    if (simulation===true)
+        return potWinner;
+    // memorizza vincitore
+    winner = potWinner;
+    // gioco terminato
+    gameOver = true;
+  }
+  
+  // colonna, stesso algoritmo
+  fail = false;
+  for (let r=0; r<3 && !fail; r++) {
+    const index = r*3 + lastMove.x;
+    if (useCells[index].owner!==potWinner)
+      fail = true;
+  }
+  if (!fail) {
+    if (simulation===true)
+        return potWinner;
+    winner = potWinner;
+    gameOver = true;
+  }
+  
+  // diagonali controllate solo se ultima mossa e' su una delle due
+  if (lastMove.x===lastMove.y || lastMove.x===(2-lastMove.y)) {
+    // diagonale NE-SO
+    fail = false;
+    for (let r=0; r<3 && !fail; r++) {
+      const index = r*3 + r;
+      if (useCells[index].owner!==potWinner)
+        fail = true;
+    }
+    if (!fail) {
+      if (simulation===true)
+        return potWinner;
+      winner = potWinner;
+      gameOver = true;
+    }
+    
+    // diagonale NO-SE
+    fail = false;
+    for (let r=0; r<3 && !fail; r++) {
+      const index = (2-r)*3 + r;
+      if (useCells[index].owner!==potWinner)
+        fail = true;
+    }
+    if (!fail) {
+      if (simulation===true)
+        return potWinner;
+      winner = potWinner;
+      gameOver = true;
+    }
+  }
+  
+  // se tutte le celle sono state utilizzate (e non e' stato trovato un vincitore)
+  if (usedCells===9 && !gameOver) {
+    // nessun vincitore, ma gioco termina comunque
+    gameOver = true;
+  }
+  
+  // aggiorna score
+  if (gameOver && winner!==null) {
+    score[winner]++;
+  }
+}
+
+let simulationContext;
+
+function makeNextMove()
+{
+  state = "SIMULATION";
+
+  // seconda versione: "base", sceglie una cella guardando solo una mossa in avanti
+  const simulatedCells = cells.map(c => { return {...c}});
+
+  // tra le celle ancora libere
+  const availCells = simulatedCells.filter((c) => c.owner===null);
+
+  simulationContext = {
+    simulatedCells,
+    availCells,
+    index: 0,
+    weightedCells: [],
+  }
+  
+  updateSimulation();
+}
+
+function updateSimulation()
+{
+  const prevCell = simulationContext.index===0 ? undefined : simulationContext.availCells[simulationContext.index-1];
+  if (prevCell!==undefined) {
+    cells[prevCell.x+prevCell.y*3].owner = null;
+    cells[prevCell.x+prevCell.y*3].simulated = false;    
+  }
+  
+  if (simulationContext.index===simulationContext.availCells.length) {
+      simulationContext.weightedCells.sort((a,b) => a.weight - b.weight);
+
+      const bestWeight = simulationContext.weightedCells[simulationContext.weightedCells.length-1].weight;
+    
+      const bestCells = simulationContext.weightedCells.filter(c => c.weight===bestWeight)
+    
+      // sceglie a caso tra le migliori
+      let selectedCell = random(bestCells);
+      
+      // trova la stessa cella nell'array iniziale
+      // si potrebbe anche usare index
+      selectedCell = cells.find(c => c.x===selectedCell.x && c.y===selectedCell.y);
+      
+      // sanity check
+      if (selectedCell!==undefined) {
+        selectedCell.owner = virtualPlayer;
+    
+        usedCells++;
+    
+        checkGameOver(selectedCell,cells,false);
+      }
+      
+      // cambio giocatore
+      nowPlaying = nowPlaying==='X' ? 'O' : 'X';    
+      
+      state = "HUMAN";
+    
+    return;
+  }
+  
+  const curCell = simulationContext.availCells[simulationContext.index];
+  cells[curCell.x+curCell.y*3].owner = virtualPlayer;
+  cells[curCell.x+curCell.y*3].simulated = true;
+
+    usedCells++;
+
+    let weight = 0;
+    
+    curCell.owner = virtualPlayer;
+    const win1 = checkGameOver(curCell,simulationContext.simulatedCells,true);
+    if (win1===virtualPlayer) {
+        weight = 10;
+    }
+    
+    curCell.owner = humanPlayer;
+    const win2 = checkGameOver(curCell,simulationContext.simulatedCells,true);
+    if (win2===humanPlayer) {
+        weight = 10;
+    }
+
+    usedCells--;
+    
+    curCell.owner = null;
+
+    simulationContext.weightedCells.push({
+        ...curCell,
+        weight
+    });
+
+    simulationContext.index++;
+    setTimeout(updateSimulation,SIMULATION_DELAY_MS);
 }
 
 function draw() {
-  fill(255, 150);
-  rect(0, 0, width, height);
+  background(40);
 
-  // drawO(createVector(width / 2, height / 2));
-  // drawS(createVector(width / 2, height / 2));
-  // drawL(createVector(width / 2, height / 2));
-  o.update(mouseX, mouseY);
-  o.display(mouseX, mouseY);
-  s.update(o.x, o.y);
-  s.display(o.x, o.y);
-  l.update(s.x, s.y);
-  l.display(s.x, s.y);
-}
+  // griglia
+  strokeWeight(1);
+  stroke(255);
+  line (0,CELL_SIZE,SIZE,CELL_SIZE);
+  line (0,2*CELL_SIZE,SIZE,2*CELL_SIZE);
+  line (CELL_SIZE,0,CELL_SIZE,SIZE);
+  line (2*CELL_SIZE,0,2*CELL_SIZE,SIZE);
 
-function Spring2D(xpos, ypos, m, g, val, w) {
-  this.x = xpos; // x 와 y 좌표
-  this.y = ypos;
-  this.vx = 0; // x축과 y축 속도
-  this.vy = 0;
-  this.mass = m;
-  this.gravity = g;
-  this.radius = 0.0008 * w;
-  this.stiffness = 0.2;
-  this.damping = 0.7;
-  this.val = val;
+  noFill();
 
-  this.update = function (targetX, targetY) {
-    let forceX = (targetX - this.x) * this.stiffness;
-    let ax = forceX / this.mass;
-    this.vx = this.damping * (this.vx + ax);
-    this.x += this.vx;
-    let forceY = (targetY - this.y) * this.stiffness;
-    forceY += this.gravity;
-    let ay = forceY / this.mass;
-    this.vy = this.damping * (this.vy + ay);
-    this.y += this.vy;
-  };
+  // disegna celle impegnate
+  for (const cell of cells) {
+    if (cell.owner!==null)
+      // crea oggetto {x,y} "on-the-fly"
+      // si potrebbe anche passare cell
+      // colore determinato con operatore ternario: 'X' in verde, 'O' in rosso
+      drawCell({x: cell.x, y: cell.y}, cell.owner, cell.owner==='X' ? 'green' : 'red', cell.simulated);
+  }
 
-  this.display = function (nx, ny) {
-    if (this.val == 0) {
-      noStroke();
-      fill(0);
-      push();
-      translate(this.x - 128 * this.radius, this.y - 128 * this.radius);
-      scale(this.radius);
-      beginShape();
-      // 1// /
-      vertex(127.6, 259.6);
-      bezierVertex(57.3, 259.6, 0.0, 202.3, 0.0, 131.9);
-      bezierVertex(0.0, 61.5, 57.3, 4.3, 127.6, 4.3);
-      bezierVertex(198.0, 4.3, 255.3, 61.5, 255.3, 131.9);
-      bezierVertex(255.3, 202.3, 198.0, 259.6, 127.6, 259.6);
-      // 1// /
-      beginContour();
-      vertex(127.6, 18.3);
-      bezierVertex(65.0, 18.3, 14.0, 69.3, 14.0, 131.9);
-      bezierVertex(14.0, 194.6, 65.0, 245.6, 127.6, 245.6);
-      bezierVertex(190.3, 245.6, 241.3, 194.6, 241.3, 131.9);
-      bezierVertex(241.3, 69.3, 190.3, 18.3, 127.6, 18.3);
-      endContour();
-      endShape();
-      pop();
-    } else if (this.val == 1) {
-      push();
-      translate(this.x - 128 * this.radius, this.y - 128 * this.radius);
-      scale(this.radius);
-      //control shape scale
-      beginShape();
-      // 1// /
-      vertex(540.6, 254.7);
-      vertex(246.5, 254.7);
-      vertex(393.6, 0.0);
-      vertex(540.6, 254.7);
-      // 1// /
-      beginContour();
-      vertex(270.8, 240.7);
-      vertex(516.4, 240.7);
-      vertex(393.6, 28.0);
-      vertex(270.8, 240.7);
-      endContour();
-      endShape();
-      pop();
-    } else if (this.val == 2) {
-      push();
-      translate(this.x - 128 * this.radius, this.y - 128 * this.radius);
-      scale(this.radius);
+  // posizione del cursore rispetto alla griglia
+  const pos = {x: int(mouseX/CELL_SIZE), y: int(mouseY/CELL_SIZE) };
+  
+  // se la cella e' libera ed il gioco e' in corso (ed eì un giocatore "umano")
+  if (!isCellUsed(pos) && !gameOver && virtualPlayer!==nowPlaying) {
+    // disegna proposta cella
+    drawCell(pos, nowPlaying,'white',false);
+  }
 
-      //control shape scale
-      // 1/ 3rd Shape
-      beginShape();
-      // 1/// /
-      vertex(791.8, 254.0);
-      vertex(570.4, 254.0);
-      vertex(570.4, 184.3);
-      vertex(791.8, 184.3);
-      vertex(791.8, 254.0);
-      // 1/// /
-      beginContour();
-      vertex(584.4, 240.0);
-      vertex(777.8, 240.0);
-      vertex(777.8, 198.3);
-      vertex(584.4, 198.3);
-      vertex(584.4, 240.0);
-      endContour();
-      endShape();
-
-      // 1/// 3rd Shape
-      beginShape();
-      // 1/// /
-      vertex(791.8, 166.0);
-      vertex(570.4, 166.0);
-      vertex(570.4, 96.3);
-      vertex(791.8, 96.3);
-      vertex(791.8, 166.0);
-      // 1/// /
-      beginContour();
-      vertex(584.4, 152.0);
-      vertex(777.8, 152.0);
-      vertex(777.8, 110.3);
-      vertex(584.4, 110.3);
-      vertex(584.4, 152.0);
-      endContour();
-      endShape();
-
-      // 1// 3rd Shape
-      beginShape();
-      // 1/// /
-      vertex(791.8, 78.1);
-      vertex(570.4, 78.1);
-      vertex(570.4, 8.3);
-      vertex(791.8, 8.3);
-      vertex(791.8, 78.1);
-      // 1/// /
-      beginContour();
-      vertex(584.4, 64.1);
-      vertex(777.8, 64.1);
-      vertex(777.8, 22.3);
-      vertex(584.4, 22.3);
-      vertex(584.4, 64.1);
-      endContour();
-      endShape();
-      pop();
+  if (!gameOver) {
+    stroke(0);
+    fill(200);
+    textSize(12);
+    textAlign(CENTER);
+    
+    if (state==="SIMULATION") {
+        text("'O' is thinking....",SIZE/2, height-STATUS_BAR_H/2);
     }
-  };
+    else {
+        text("Your turn",SIZE/2, height-STATUS_BAR_H/2);
+    }
+  }
+  else {
+    stroke(0);
+    fill('white');
+    textSize(12);
+    textAlign(CENTER);
+    text("Press 'n' for new game, 'r' to restart",SIZE/2, height-STATUS_BAR_H/2);
+  }
+  
+  // score
+  stroke(0);
+  textSize(18);
+  textAlign(LEFT);
+  fill('green');
+  text("X: " + score['X'], 10, height-STATUS_BAR_H/2);
+  fill('red');
+  textAlign(RIGHT);
+  text("O: " + score['O'], width-10, height-STATUS_BAR_H/2);
+
+  // gioco terminato
+  if (gameOver) {    
+    strokeWeight(1);
+    stroke('white');
+    fill('white');
+    textSize(32);
+    textAlign(CENTER);
+    
+    switch (winner) {
+      case 'X':
+        // 'X' vince
+        text("X wins!",SIZE/2, SIZE/2);
+        break;
+      case 'O':
+        // 'O' vince
+        text("O wins!",SIZE/2, SIZE/2);
+        break;
+      default:
+        // nessun vincitore
+        text("NO WINNER",SIZE/2, SIZE/2);
+        break;
+    }
+  }
 }
+
+function mousePressed()
+{
+  // posizione del cursore rispetto alla griglia
+  const p = {
+    x: int(mouseX / CELL_SIZE),
+    y: int(mouseY / CELL_SIZE),
+  }
+
+  // se la cella e' libera
+  // controlla che sia un giocatore "umano"
+  if (!isCellUsed(p) && virtualPlayer!==nowPlaying) {
+    // calcola indice rispetto ad array
+    const index = p.x + 3 * p.y;
+
+    // in range
+    if (index>=0 && index<cells.length) {
+      // alloca cella a giocatore
+      cells[index].owner = nowPlaying;
+      
+      usedCells++;
+      
+      // cambio giocatore
+      nowPlaying = nowPlaying==='X' ? 'O' : 'X';
+      
+      checkGameOver(cells[index], cells, false);
+
+      // se il gioco non e' terminato ed il giocatore e' virtuale
+      if (!gameOver && nowPlaying===virtualPlayer) {
+        makeNextMove();
+      }
+    }
+  }
+}
+
+function keyPressed()
+{
+  // evento pressione sulla tastiera
+  // key indica il tasto premuto
+  
+  if (key==='r') {
+    // r => reset
+    resetGame();
+  }
+  if (key==='n') {
+    // n => nuova partita
+    initGame();
+  }
+}
+
       </script>
 </body>
