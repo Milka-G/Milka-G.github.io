@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Piekarnia Pod Czarną Gąską Grid</title>
+<link href="https://fonts.googleapis.com/css?family=Stint+Ultra+Expanded" rel="stylesheet">
+<style>
+
+html {
+  box-sizing: border-box;
+}
+* {
+  box-sizing: inherit;
+}
+body {
+  font-family: Georgia, serif; 
+  font-size: 100%;
+  background-color: white;
+  margin: 0;
+}
+
+/* POCZĄTEK STYLÓW SIATKI */
+#layout {
+  margin-left: 5%;
+  margin-right: 5%;
+  display: grid;
+  grid-template-rows: 3em 20px [main-start] 150px auto 5em [main-end];
+  grid-template-columns:  [main-start] 1fr [main-end] repeat(3, 20px 150px); 
+}
+nav {
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 1;
+  grid-column-end: 8;
+} 
+#figA {
+  grid-area: 3 / 3 / 4 / 4;
+}
+#figB {
+  grid-area: 3 / 5 / 4 / 6;
+}
+#figC {
+  grid-row: 3 / 4;
+  grid-column: span 1 / -1;
+}
+main {
+/*  grid-row: main-start / main-end;
+  grid-column: main-start / main-end; */
+  grid-area: main;
+}
+footer { 
+  grid-row: 5 / 6;
+  grid-column: 3 / -1;
+  } 
+
+
+/* POCZĄTEK STYLÓW WIZUALNYCH */
+
+/* Style łączy. */
+a:link, a:visited { color: #DC6903; }
+a:focus, a:hover, a:active { color: #F9AB33; }
+
+a {
+  text-decoration: none;
+  border-bottom: 1px dotted;
+  padding-bottom: .2em;
+}
+
+
+
+/* Style nawigacji. */
+nav, footer {
+  font-family: verdana, sans-serif;
+  background-color: #783F27;
+}
+nav ul li a:link, nav ul li a:visited {
+  color: #F9AB33;
+}
+nav ul li a:focus, nav ul li a:hover, nav ul li a:active {
+  color: #fff;
+}
+nav ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  display: flex;
+  justify-content: center;
+}
+nav ul li {
+  font-size: .8em;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+}
+nav ul li a {
+  display: block;
+  border: 1px solid;
+  border-radius: .5em;
+  padding: .5em 1em;
+  margin: .5em; 
+}
+
+
+/* Style treści głównej. */
+main {
+  font-family: 'Stint Ultra Expanded', Georgia, serif;
+  background-color: white;
+  line-height: 1.8em;
+  color: #555;
+  padding: 1em;
+  border: double 4px #EADDC4;
+  border-radius: 25px;
+}
+
+
+/* Pozostałe style. */
+
+figure {
+  margin: 0;
+  padding: 0;'
+   /* Wyzerowanie stylów przeglądarki WWW dla rysunków. */
+}
+
+footer {
+  color: #EADDC4;
+  text-align: center;
+  font-size: .8em;
+  padding: .5em;
+}
+
+</style>
+</head>
+
+<body>
+<div id="layout">
+
+<nav>
+  <ul>
+    <li><a href="">Menu</a></li>
+    <li><a href="">Aktualności</a></li>
+    <li><a href="">O piekarni</a></li>
+    <li><a href="">Kontakt</a></li>
+  </ul>
+</nav>  
+
+<main>
+<h2>Poznaj chleby świata!</h2>
+<p>Wygląda na to, że każdy region świata ma swoje własne podejście do tego tematu. Od chrupiącej francuskiej bagietki, po afgański chleb wielkości stołu, chleb może mieć najróżniejsze kształty, rozmiar i konsystencję..</p>
+<p>Co miesiąc wybieramy chleb będący specjałem określonego regionu na świecie. Niektóre są wyrabiane na miejscu przez naszych piekarzy podróżujących do najróżniejszych zakątków świata i uczących się regionalnych technik ich wyrobu, a następnie przywożone tutaj do spróbowania. Z kolei inne są dostarczane przez lokalnych piekarzy od lat zajmujących się ich wypiekaniem.</p>
+
+<p>Gdy zajrzysz do naszej piekarni, zapraszamy Cię na degustację chleba miesiąca. Jeśli nie możesz przybyć osobiście, chleb możesz kupić online.</p>
+<p>Jesteśmi naprawdę dumni z naszych świeżych i unikatowych chlebów.</p>
+<!--
+<p>Nasz chleb wypiekamy codziennie z najwyższej jakości mąki, wody, soli, drożdży lub zakwasu. To proste i naturalne, nigdy nie stosujemy żadnych konserwantów. Cierpliwość jest kluczem do osiągnięcia odpowiedniego poziomu fermentacji i doprowadzenia każdego bochenka chleba do perfekcji. Oferujemy różne rodzaje chleba m.in.: pełnoziarnisty, na zakwasie, razowy, żytni oraz chleb z cebulą i ziemniakami.</p>
+-->
+</main>
+
+<figure id="figA"><img src="images/uzbek_150.jpg"></figure>
+<figure id="figB"><img src="images/bread_150.jpg"></figure>
+<figure id="figC"><img src="images/braided_150.jpg"></figure>
+
+<footer>
+<p><strong>Piekarnia Pod Czarną Gąską</strong> | Seekonk, MA <br>
+poniedziałek &ndash; piątek: 5 do 15 | sobota &amp; niedziela: 6 do 16</p>
+</footer>
+
+</div>
+</body>
+</html>
+
+

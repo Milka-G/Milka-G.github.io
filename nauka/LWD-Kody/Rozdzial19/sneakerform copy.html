@@ -1,0 +1,222 @@
+<!DOCTYPE html >
+<html>
+<head>
+  <meta charset="utf-8" >
+   <title>Formularz udziału w konkursie</title>
+   <style type="text/css">
+
+	/* Zapewnienie spójnej zmiany wielkości elementów. */
+	html {
+		box-sizing: border-box;
+		}
+	*, *:before, *:after {
+		box-sizing: inherit;
+		}
+	
+	/* ========= PODSTAWOWE STYLE CZCIONEK ========= */
+	
+	body {
+		font-family: Verdana, Geneva, sans-serif;
+		font-size: 100%;
+		margin: 2em 10%;
+		line-height: 1;
+		}
+	
+	h2 {
+		font-size: 1.2em;
+		margin: 0 0 1.5em 0;
+	}
+	em {
+		font-size: .8em;
+		color: rgba(0,0,0,.4);
+	}
+	
+	/* ========= WYZEROWANIE STYLÓW LIST ========= */
+	
+	ul { 
+	   list-style-type: none;
+		margin: 0;
+		padding: 0;
+		  }
+	
+	/* ========= DODANIE MIEJSCA POD ELEMENTAMI LISTY W FORMULARZU 
+	(POZA POLAMI WYBORU I PRZYCISKAMI OPCJI) ========= */
+	
+	ul li {
+		margin-bottom: 1em; 
+	}
+	#colors ul li, #features ul li {
+		margin-bottom: 0;
+	} 
+	
+	
+	/* ========= WIELKOŚĆ I STYLE FORMULARZA =========  */
+	
+	form {
+		max-width: 40em;
+		border: 1px solid #666;
+		border-radius: 10px;
+		background-color:#f2f5d5;
+		padding: 1em;
+		}
+		
+	/* ========= STYLE WYRÓWNANIA KONTENERA FLEXBOX ============ */
+	
+	li {
+		  /* Etykieta i pole danych wejściowych stają się elementami flex w każdym elemencie listy. */
+		  /* Zawijanie wierszy jest włączone, aby na wąskich ekranach etykiety pozostawały widoczne nad polami danych wejściowych. */
+		display: flex;
+		flex-wrap: wrap;
+	}
+	label {
+		/* Etykiety mają stałą szerokość 8ems i niewielki margines, 
+		aby nie nachodziły na pozostałe elementy. */
+		flex: 0 0 8em;
+		margin-right: 1em;
+		margin-bottom: 4px;
+		color: #04699d;
+	
+	}
+	input, textarea, fieldset {
+		/* Pola danych wejściowych formularza są elastyczne i wypełniają całą dostępną szerokość. */
+		flex: 1 1 20em;
+	}
+	
+	#features label, #colors label {
+		/* Ponieważ etykiety są używane inaczej na listach w elementach fieldset
+		(mamy po jednej dla każdego przycisku opcji i pola wyboru),
+		więc konieczne jest nadpisanie poprzednich ustawień flex, aby etykiety były ułożone poprawie. */
+		flex: 1 1 auto;
+		color: #000;
+	}
+	
+	#colors ul {
+		/* To powoduje, że każdy przycisk opcji na liście jest elementem flex, więc są one ułożone poziomo. */
+		/* To można również zrobić za pomocą właściwości display: inline, 
+		ale w przypadku mniejszej ilości miejsca, czasem etykiety są oddzielone od ich przycisków lub pojemników. */
+		display: flex;
+		flex-wrap: wrap;
+	}
+	
+	
+	/*  ========= STYLE WIDŻETÓW FORMULARZA  ========= */
+	/* Czcionki są "dziedziczone" po właściwości font-family dokumentu. */
+	
+	input.textinput {
+		height: 2em;
+		border: 1px solid rgba(0,0,0,.3);
+		padding-left: 6px;
+		font-family: inherit;
+		font-size: .875em;
+	}
+	textarea {
+		display: block;
+		height: 5em;
+		border: 1px solid rgba(0,0,0,.3);
+		padding-left: 6px;
+		font-family: inherit; 
+		font-size: .875em;
+		line-height: 1.25;
+		overflow: auto;
+		resize: none;
+	}
+	select {
+		width: 6em;
+		font-size: inherit; /* Domyślna wielkość czcionki w przeglądarce WWW jest bardzo mała, więc zmieniłam ją, aby dopasować do dokumentu. */
+		margin-right: 10px;
+	}
+	input[type="submit"] {
+		/* Zmieniłam styl przycisku i margineseom przypisałam wartość "auto", 
+		aby zawsze pozostały wyśrodkowane w formularzu. */
+		width: 10em;
+		height: 2em;
+		background: white;
+		border: 1px solid #04699d;
+		border-radius: 4px;
+		font-size: inherit;
+		flex: 0 1 8em;
+		margin: 0 auto;
+	}
+	
+	
+	/* ========= STYLE ELEMENTÓW FIELDSET I LEGEND ========= */
+	fieldset {
+		/* Wyłączenie domyślnego obramowania, które przeglądarka WWW umieszcza wokół elementu fieldset. */
+		padding: 0;
+		border: none;
+	}
+	legend {
+		/* To powoduje wyłączenie legendy, choć nadal pozostaje ona dostępna dla czytników ekranu,  
+		dla każdej opcji pola wyboru lub przycisku. */
+		/* UWAGA: Istnieje jeszcze etykieta wyświetlana dla każdego elementu fieldset, więc upewniłam się,
+		że elementy label i legend są odmienne i nie mają tej samej wartości. */
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+	}
+	
+		
+	</style> 
+
+</head>
+
+<body>
+
+
+
+<form action="" method="post">
+
+<h2>Formularz konkursu</h2>
+
+<ul>
+<li><label for="form-name">Imię i nazwisko:</label> <input type="text" name="username" id="form-name" class="textinput"></li>
+<li><label for="form-email">E-mail:</label> <input type="email" name="emailaddress" id="form-email"class="textinput"></li>
+<li><label for="form-tel">Telefon:</label> <input type="tel" name="telephone" id="form-tel"class="textinput"></li>
+<li><label for="form-story">Moje buty są takie stare...:</label> <textarea name="story" maxlength="600" id="form-story" placeholder="Nie więcej niż 300 znaków"></textarea></li>
+<li>
+<label for="sizes">Rozmiar:</label>
+<select name="size">
+<option>38</option>
+<option>39</option>
+<option>40</option>
+<option>41</option>
+<option>42</option>
+<option>43</option>
+<option>44</option>
+<option>45</option>
+<option>46</option>
+</select> <em>Rozmiar zgodny ze standardowymi numerami butów</em>
+</li>
+
+<li>
+<label for="colors">Kolor butów:</label>
+<fieldset id="colors">
+<legend>Kolor</legend>
+  <ul>
+  <li><label><input type="radio" name="color" value="red"> czerwony</label> </li>
+  <li><label><input type="radio" name="color" value="blue"> niebieski</label> </li>
+  <li><label><input type="radio" name="color" value="black"> czarny</label> </li>
+  <li><label><input type="radio" name="color" value="silver"> srebrny</label> </li>
+  </ul>
+</fieldset>
+</li>
+
+<li>
+<label for="features">Opcje dodatkowe:</label>
+<fieldset id="features">
+<legend>Opcje</legend>
+  <ul>
+  <li><label><input type="checkbox" name="feature" value="laces"> Błyszczące sznurówki</label></li>
+  <li><label><input type="checkbox" name="feature" value="logo" checked> Metalowe logo</label></li>
+  <li><label><input type="checkbox" name="feature" value="heels"> Świecące podeszwy</label></li>
+  <li><label><input type="checkbox" name="feature" value="mp3"> Odtwarzacz MP3</label></li>
+  </ul>
+</fieldset>
+</li>
+<li class="buttons"><input type="submit" value="Wyślij"></li>
+
+</ul>
+
+</form>
+</body>
+</html>
